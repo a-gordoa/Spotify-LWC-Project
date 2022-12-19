@@ -1,0 +1,183 @@
+<template>
+
+
+
+    <lightning-card title="Spotify Playlist Info">  
+        
+        <strong>
+            <ul class="slds-list_dotted">
+                <li>Make the song title a clickable link directly in the datatable</li>
+                <li>pull album into the row that's currently Spotify link</li>
+                <li>Bug: spinning wheel forever when you enter the same token twice </li>
+            </ul>
+        </strong>
+        
+
+
+
+        <!-- Left and Right panels showing playlist info and image -->
+        <div class="slds-grid slds-wrap slds-card__header" if:true={renderPlaylistInfo}>
+            <div class=" slds-size_5-of-8">
+                <!-- <p> Placeholder text <strong> 4 </strong></p> -->
+                <a href={playlistSpotifyURL} target="_blank" class="slds-text-heading_large"><p>{playlistName}</p></a>
+                <br>
+                <div class="slds-var-m-left_medium">
+                    <p class="slds-text-heading_medium">Description:</p>
+                    <!-- <br> -->
+                    <p>{playlistDescription}
+                    </p>
+                </div>
+                <div class="slds-var-m-around_medium">
+                    <p class="slds-text-heading_medium">Followers:</p>
+                    <p>{followerCount}</p>
+                </div>
+
+                <div class="slds-var-m-around_medium">
+                    <p class="slds-text-heading_medium">Created By</p>
+                    <p>{playlistOwnerName}</p>
+                </div>
+
+            </div>
+
+
+            <div class="slds-size_3-of-8 ">
+                <!-- <p>test</p> -->
+                <div if:true={renderPlaylistInfo}>
+                    <a href={playlistSpotifyURL} target="_blank"> <img src={playlistCoverImageURL} alt="" width="300" height="300"></a>
+                </div>
+                
+                
+            </div>
+        </div>    
+            
+
+        <!-- Loading Spinner -->
+        <div if:true={loadingSpinner} class="" style="height:6rem;position:relative">
+            <div role="status" class="slds-spinner slds-spinner_medium">
+              <span class="slds-assistive-text">Loading</span>
+              <div class="slds-spinner__dot-a"></div>
+              <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+
+        <!-- Button and Search Bar -->
+        <div class="slds-grid slds-wrap">
+            <div class="slds-media__body slds-var-m-left_large slds-size_2-of-12">
+                <lightning-button variant="brand" label="Click Me Plz" title="Click Me Plz" onclick={handleClick} class="slds-var-m-left_x-small"></lightning-button>
+            </div>
+            <div class="slds-media__body  slds-var-m-right_x-small slds-size_9-of-12">
+                <input type="text" id="text-input-id-47" placeholder="Enter Spotify Playlist Token" class="slds-input tokenInputField" />
+            </div>
+            
+        </div>    
+
+        
+        <!-- Show instructions button -->
+        <div>
+            <div  class="slds-var-m-left_large slds-var-m-bottom_large slds-text-align_left if:false={renderInstructions}" >
+                <button class="slds-button" onclick={showModalHandler}>(Show Instructions)</button>    
+            </div>
+        </div>
+
+        <!-- Inital Load Instructions Page -->
+        <div if:true={renderInstructions}>
+            <div class="slds-text-heading_medium slds-var-m-around_xx-large slds-align_absolute-center" > 
+                <p>Please enter a Spotify playlist token in the search bar above to retrieve info on the desired playlist</p>
+            </div>
+            <div class="slds-text-heading_medium">
+                <p class="slds-align_absolute-center">You can find the token for any Spotify playlist at the end of it's URL in your web browser</p>
+                <br>
+                <p class="slds-align_absolute-center slds-text-heading_small"> Here are a few if you don't want to go find some yourself: </p>
+                <p class="slds-align_absolute-center slds-text-heading_small">Focus Jazz: 37i9dQZF1DX8wWHvPMMfNA</p>
+                <p class="slds-align_absolute-center slds-text-heading_small">Golden Hour: 37i9dQZF1DWUE76cNNotSg</p>
+                <p class="slds-align_absolute-center slds-text-heading_small">New Music Friday: 37i9dQZF1DX4JAvHpjipBk</p>
+                <br>
+                <div class="slds-align_absolute-center slds-var-m-bottom_large ">
+                    <img  src="https://i.imgur.com/n8OqQh4.png" alt="" width="600" height="600"></a>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Error Page -->
+        <div if:true={renderErrorMsg}>
+            <div class="slds-text-heading_medium slds-var-m-around_xx-large slds-align_absolute-center slds-text-color_error" > 
+                <p>The token you entered isn't valid, please be double check and try again.</p>        
+            </div>
+            <div class="slds-text-heading_medium">
+                <p class="slds-align_absolute-center">You can find the token for any Spotify playlist at the end of it's URL in your web browser</p>
+                <br>
+                <div class="slds-align_absolute-center slds-var-m-bottom_large ">
+                    <img  src="https://i.imgur.com/n8OqQh4.png" alt="" width="600" height="600"></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- module that pops up -->
+        <section if:true={showModal} role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01"
+		class="slds-modal slds-fade-in-open">
+
+		<div class="slds-modal__container">
+			<div class="slds-modal__header">
+                <!-- X Button on top -->
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={showModalHandler}>
+                    <lightning-icon icon-name="utility:close"
+                        alternative-text="close"
+                        variant="inverse"
+                        size="small" ></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                
+                <!--  Header title -->
+                <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Instructions</h1>
+			</div>
+
+            <!-- Body -->
+			<div class="slds-modal__content slds-var-p-around_medium" id="modal-content-id-1">
+				<div class="slds-text-heading_medium slds-align_absolute-center">
+					<p>Please enter a Spotify playlist token in the search bar to retrieve info on the desired playlist</p>
+				</div>
+				<br>
+				<div class="slds-text-heading_medium">
+					<p class="slds-align_absolute-center">You can find the token for any Spotify playlist at the end of it's URL
+						in your web browser</p>
+					<br>
+                    
+                    <p class="slds-align_absolute-center slds-text-heading_small"> Here are a few if you don't want to go find some yourself: </p>
+                    <p class="slds-align_absolute-center slds-text-heading_small">Focus Jazz: 37i9dQZF1DX8wWHvPMMfNA</p>
+                    <p class="slds-align_absolute-center slds-text-heading_small">Golden Hour: 37i9dQZF1DWUE76cNNotSg</p>
+                    <p class="slds-align_absolute-center slds-text-heading_small">New Music Friday: 37i9dQZF1DX4JAvHpjipBk</p>
+                    <br>
+					<div class="slds-align_absolute-center slds-var-m-bottom_large ">
+						<img  src="https://i.imgur.com/n8OqQh4.png" alt="" width="600" height="600"></a>
+					</div>
+				</div>
+
+			</div>
+
+            <!-- Footer and Close Button -->
+			<div class="slds-modal__footer">
+				<button onclick={showModalHandler} class="slds-button slds-button_brand">Close</button>
+			</div>
+		</div>
+	    </section>
+            <!-- This is the grey background  for the modal -->
+            <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+
+
+        <!-- Tracklist Datatable -->
+        <div if:true={renderPlaylistInfo} style="height: 300px;" class="slds-var-m-right_large slds-var-m-left_large">
+            <lightning-datatable
+                    key-field="id"
+                    data={outputJSON.data}
+                    columns={columns}>
+            </lightning-datatable>
+        </div>
+
+
+        
+
+
+        
+    </lightning-card>
+</template>

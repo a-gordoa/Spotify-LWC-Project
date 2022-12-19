@@ -1,0 +1,31 @@
+<apex:page>
+
+
+
+    Code: {!$CurrentPage.parameters.code}
+
+    <script type="text/javascript">
+
+        window.onload=function()      
+        {        
+            //let sfInstanceURL = 'https://agordoa-dev-ed.develop.lightning.force.com/lightning/n/Playground1?'; //non public
+            let sfInstanceURL = 'https://agordoa-dev-ed.develop.my.site.com/portfolio1/s/lwc-page?'; // public page
+            let namespaceParam = 'c__code';
+
+
+            let urlString =  window.location.search;
+            let urlParams = new URLSearchParams(urlString)
+            let paramCodeValue = urlParams.get("code");
+
+            let redirectURL = sfInstanceURL + namespaceParam +'='+ paramCodeValue;
+            console.log(redirectURL);
+
+            window.location.replace(redirectURL);
+            // alert( );
+
+
+        };
+        </script>
+
+
+</apex:page>

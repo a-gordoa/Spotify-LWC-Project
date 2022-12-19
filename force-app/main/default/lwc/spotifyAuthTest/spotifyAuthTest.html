@@ -1,0 +1,26 @@
+<template>
+    <lightning-card>
+        <lightning-button label="Click Me 1st" onclick={handleAuthPress}></lightning-button>  
+        <br>
+        <strong>Page Reference 4: </strong> {urlCode}
+        <br>
+        <br>
+        <!-- <strong>authURL2</strong>  = {authURL}
+        <br>
+        <br> -->
+        <strong>Returned Access Token: </strong>{accessToken}
+        <br>
+        <br>
+        <lightning-input label="Playlist Name" onchange={handlePlaylistName}></lightning-input>
+        <lightning-input label="Description" onchange={handlePlaylistDescription}></lightning-input>
+        <lightning-input label="Public" type="checkbox" onchange={handlePlaylistPublicCheckbox}></lightning-input>
+        <lightning-button label="Submit" onclick={handlePlaylistSubmit}></lightning-button>
+
+        <template if:true={submitted}>
+
+            <p> Playlist was submitted</p>
+        </template>
+
+
+    </lightning-card>
+</template>
