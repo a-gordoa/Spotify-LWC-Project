@@ -1,12 +1,17 @@
 import { LightningElement, wire } from 'lwc';
 import { NavigationMixin, CurrentPageReference } from 'lightning/navigation';
-import calloutForAccessToken_WithUserAuth from '@salesforce/apex/SpotifyAPIRequest.calloutForAccessToken_WithUserAuth';
+import calloutForAccessAndRefreshToken from '@salesforce/apex/SpotifyAPIRequest.calloutForAccessAndRefreshToken';
 import createPlaylist from '@salesforce/apex/SpotifyAPIRequest.createPlaylist';
+import getRefreshedAccessToken from '@salesforce/apex/SpotifyAPIRequest.getRefreshedAccessToken';
 
 export default class SpotifyAuthTest extends NavigationMixin(LightningElement) {
     
 
 
+
+    /* --------------------------------------------------------------------  */
+                // New Refresh Token Component
+    /* --------------------------------------------------------------------  */
 
     client_id = 'a9646708a8f04fe88cd0c50c1e3c4f82';
     response_type = 'code';
@@ -17,29 +22,20 @@ export default class SpotifyAuthTest extends NavigationMixin(LightningElement) {
 
     authURL = String('https://accounts.spotify.com/en/authorize?'+'&client_id='+ this.client_id+'&response_type='+ this.response_type+'&redirect_uri='+ this.redirect_uri+'&scope='+ this.scope);
    
-   //authURL = 'https://accounts.spotify.com/en/authorize?&client_id=a9646708a8f04fe88cd0c50c1e3c4f82&response_type=code&redirect_uri=https://johngordoaudemysandbox-dev-ed.develop.lightning.force.com/&scope=user-read-private%20user-read-email&response_type=code';
-   //authURL = 'https://accounts.spotify.com/en/authorize?&client_id=a9646708a8f04fe88cd0c50c1e3c4f82&response_type=code&redirect_uri=https://johngordoaudemysandbox-dev-ed.develop.lightning.force.com/lightning/n/Playground/&scope=user-read-private%20user-read-email&response_type=c__code';
-   //authURL = 'https://accounts.spotify.com/en/authorize?&client_id=a9646708a8f04fe88cd0c50c1e3c4f82&response_type=code&redirect_uri=https://johngordoaudemysandbox-dev-ed--c.develop.vf.force.com/apex/SpotifyAuthCodeCatcher&scope=user-read-private%20user-read-email';
-   
     // this is used to store the c__code that spotify returns after teh inital Ouath flow
     urlCode;
 
     // Access token that you receive after the initial URL token. This allows you to makes calls to the Spotify API
     // when you are requesting personal info from users. 
     accessToken;
+    refreshToken;
 
-    // User Id from Spotify user Profile
-    spotifyUserID;
-   
-    playlistName;
-    playlistDescription;
-
-
-   @wire(calloutForAccessToken_WithUserAuth,{methodInput: 'POST',returnedAPICode: '$urlCode'})
-   accessTokenOutput ({data,error}) {
+   @wire(calloutForAccessAndRefreshToken,{methodInput: 'POST',returnedAPICode: '$urlCode'})
+   OAuthTokenListOutput ({data,error}) {
         console.log('UR code pre IF statement: '+ this.urlCode)
         if(data) {
-            this.accessToken = data[0];
+            this.accessToken = data[0].access_token;
+            this.refreshToken = data[0].refresh_token;
         }
         else if (error){
             console.log('URL CODE: '+ this.urlCode)
@@ -65,8 +61,6 @@ export default class SpotifyAuthTest extends NavigationMixin(LightningElement) {
    
     }
 
-
-
     
     currentPageReference;
     // Injects the page reference that describes the current page
@@ -79,15 +73,39 @@ export default class SpotifyAuthTest extends NavigationMixin(LightningElement) {
 
     }
 
+    /* --------------------------------------------------------------------  */
+                // Playlist creator component
+    /* --------------------------------------------------------------------  */
+
+    access_token;
+    error;
+    connectedCallback() {
+        console.log('CAllback worked');
+        getRefreshedAccessToken()
+        .then(result =>{
+            this.access_token = result[0];
+            console.log('result = ' + result);
+            console.log('this.access_token = ' + this.access_token);
+        })
+        .catch(error=>{
+            this.error = error;
+        })
+    }
+
+    playlistName;
+    playlistDescription;
+
     newlyCreatedPlaylist;
     createPlaylistError;
-    testAcctId = '31xsewkexphjzpb4zw2kk3yitrcq'; 
-    realAcctID = '12820729'; 
+    appAccountID = '31xsewkexphjzpb4zw2kk3yitrcq'; 
+    personalAccountID = '12820729'; 
     submitted = false;
     handlePlaylistSubmit(){
         this.submitted = true;
+
+
         
-        createPlaylist({name: this.playlistName, description: this.playlistDescription ,  publicBool: this.playlistPublicCheckbox,  spotUserId: this.testAcctId,  token: this.accessToken})
+        createPlaylist({name: this.playlistName, description: this.playlistDescription ,  publicBool: this.playlistPublicCheckbox,  spotUserId: this.personalAccountID,  token: this.access_token})
             .then((result) => {
                 console.log()
                 console.log('PL should be created');
@@ -117,6 +135,8 @@ export default class SpotifyAuthTest extends NavigationMixin(LightningElement) {
         console.log(this.playlistPublicCheckbox);
     }
 
+    /* --------------------------------------------------------------------  */
+    /* --------------------------------------------------------------------  */
 
 
     

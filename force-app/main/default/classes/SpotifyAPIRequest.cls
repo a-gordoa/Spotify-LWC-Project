@@ -6,14 +6,152 @@ public class SpotifyAPIRequest {
     static String staticAuthToken;
 
 
-    // maybe rename this to accessTokenFromResponse
-    public static String getTokenFromRequestJSON (HttpResponse response) {
-        system.debug('MAde it to getTokenFromRequestJSON');
+    // Returns Access Token from an http response from Spotify's API
+    public static String getAccessTokenFromRequestJSON(HttpResponse response) {
+        system.debug('MAde it to getAccessTokenFromRequestJSON');
 		Map<String,Object> authResponseMap = (Map<String,Object>)JSON.deserializeUntyped(response.getBody());
 		String token = string.valueOf(authResponseMap.get('access_token'));
         return token;
     }
     
+    // Returns Refresh Token from an http response from Spotify's API
+    public static String getRefreshTokenFromRequestJSON(HttpResponse response) {
+		Map<String,Object> authResponseMap = (Map<String,Object>)JSON.deserializeUntyped(response.getBody());
+		String token = string.valueOf(authResponseMap.get('refresh_token'));
+        return token;
+    }
+
+    // Method is used to get a new Access Token from a Spotify account that has
+    // already authorized their account. 
+    // It returns a List so that it can work with @wires in LWC
+    @AuraEnabled(cacheable=true)
+    public static List<String> getRefreshedAccessToken(){
+
+        String refreshToken = [SELECT id, value__c FROM refresh_token__c where id='a00Dn000003PPPAIA4'].value__c;
+
+        String grantType = 'refresh_token';
+        String encryptedAuthKey = 'Basic YTk2NDY3MDhhOGYwNGZlODhjZDBjNTBjMWUzYzRmODI6YzRlZTYwNzQ2MmQ2NGVhNTg3NTJiMzJkMzBmMWNjNzI=';
+        String payload = 'grant_type='+ grantType+ '&refresh_token=' + refreshToken;
+
+        //Contructs API request that's sent to Spotify to get temp auth token 
+        HttpRequest request = new HttpRequest();
+        request.setMethod('POST');
+        
+        request.setEndpoint('https://accounts.spotify.com/api/token');
+
+        request.setHeader('Content-Type','application/x-www-form-urlencoded');
+        request.setHeader('Authorization', encryptedAuthKey);
+        
+        request.setBody(payload);
+        
+        //Sends the above info to Spotify and gets back an HTTP Response
+        Http binding = new Http();
+        HttpResponse tokenResponse = binding.send(request);
+
+        if (tokenResponse.getStatusCode()==200) {
+
+            String accessTokenToReturn = getAccessTokenFromRequestJSON(tokenResponse);
+
+            List<String> returnList = new List<String>();
+            returnList.add(accessTokenToReturn);
+            return returnList;
+            
+        } else {
+            String errorMessage = 'This did not work, returned other than 200';
+            system.debug('Status Code: ' + tokenResponse.getStatusCode());
+            system.debug('Status Message: ' + tokenResponse.getStatus());
+            system.debug(errorMessage);
+            List<String> returnList = new List<String>();
+            returnList.add(errorMessage);
+            return returnList;
+
+        }
+
+    }
+
+    // Method that get makes a callout to Spotify's API and gets an Access Token and 
+    // Refresh Token. These are stored in a wrapper class called SpotifyOAuthResponse
+    // This returns a List so that it can be called via a @wire in an LWC
+    @AuraEnabled(cacheable=true)
+    public static List<SpotifyOAuthResponse> calloutForAccessAndRefreshToken(String methodInput, String returnedAPICode) {
+
+        system.debug('methodInput-----  '+ methodInput);
+        system.debug('returnedAPICode-----  '+ returnedAPICode);
+        
+        String method = methodInput.capitalize();
+        system.debug('Cap method = '+ method);
+
+        system.debug('MAde it to calloutForAccessToken_WithUserAuth');
+
+
+        // Auth token var that will be used to return  
+        String returnedTokenfromJSON;
+
+        // this is a combo of teh secre and client keys converted using 
+        // secretID:clientID in https://mixedanalytics.com/tools/basic-authentication-generator/
+        String encryptedAuthKey = 'Basic YTk2NDY3MDhhOGYwNGZlODhjZDBjNTBjMWUzYzRmODI6YzRlZTYwNzQ2MmQ2NGVhNTg3NTJiMzJkMzBmMWNjNzI=';
+        String redirectURI = 'https://agordoa-dev-ed.develop.my.site.com/portfolio1/SpotifyAuthCodeCatcher';
+        String grantType = 'authorization_code';
+
+        
+        //Formats the payload that is sent in for the Access Token
+        String payload = 'code='+ returnedAPICode +'&grant_type='+ grantType + '&redirect_uri='+redirectURI;
+        system.debug('Payload-----'+ payload);
+        
+        //Contructs API request that's sent to Spotify to get temp auth token 
+        HttpRequest request = new HttpRequest();
+        request.setMethod(method);
+        
+        request.setEndpoint('https://accounts.spotify.com/api/token');
+
+        request.setHeader('Content-Type','application/x-www-form-urlencoded');
+        request.setHeader('Authorization', encryptedAuthKey);
+        
+        request.setBody(payload);
+
+        system.debug('----- Request ---- ' + request);
+        system.debug('----- getBodyDocument ---- ' + request.getBodyDocument());
+        system.debug('----- Body ---- ' + request.getBody());
+        system.debug('----- Authorization ---- ' + request.getHeader('Authorization'));
+        system.debug('----- Content-Type ---- ' + request.getHeader('Content-Type'));
+
+                    
+        //Sends the above info to Spotify and gets back an HTTP Response
+        Http binding = new Http();
+        HttpResponse tokenResponse = binding.send(request);
+        
+        
+        // Checks if tokenResponse worked properly
+        if(tokenResponse.getStatusCode()==200) {
+            
+            SpotifyOAuthResponse o_auth_obj = new SpotifyOAuthResponse();
+            
+            // helper methods that parse the tokens from the http request response
+            // and add them to a wrapper class
+            o_auth_obj.access_token = getAccessTokenFromRequestJSON(tokenResponse); 
+            o_auth_obj.refresh_token = getRefreshTokenFromRequestJSON(tokenResponse);
+
+            system.debug('o_auth_obj.access_token = ' +o_auth_obj.access_token );
+            system.debug('o_auth_obj.refresh_token = ' +o_auth_obj.refresh_token );
+
+
+            // Returned in a list form so that it can be referenced by a @wire in LWC component
+            List<SpotifyOAuthResponse> return_OAuth_Obj_List = new List<SpotifyOAuthResponse>();
+            return_OAuth_Obj_List.add(o_auth_obj);
+
+            system.debug('return_OAuth_Obj_List = ' +return_OAuth_Obj_List );
+            return return_OAuth_Obj_List;
+        } 
+        // Returns string for debugging if http tokenResponse didn't work
+        else {
+            system.debug('This did not work, returned other than 200');
+            system.debug('Status Code: ' + tokenResponse.getStatusCode());
+            system.debug('Status Message: ' + tokenResponse.getStatus());
+            
+            List<SpotifyOAuthResponse> return_OAuth_Obj_List = new List<SpotifyOAuthResponse>();
+            return return_OAuth_Obj_List;
+        }
+    }
 
     // this is the primary version of this method, which takes two args and is used to get 
     // the access token when another user auth isn't needed
@@ -99,7 +237,7 @@ public class SpotifyAPIRequest {
                 // Parses returned HTTPrequest to an 
                 // auth token using written class method and returns 
                 // a single string 
-                returnedTokenfromJSON = getTokenFromRequestJSON(tokenResponse);
+                returnedTokenfromJSON = getAccessTokenFromRequestJSON(tokenResponse);
                 List<String> returnTokenList = new List<String>();
                 returnTokenList.add(returnedTokenfromJSON);
                 return returnTokenList;
@@ -169,7 +307,7 @@ public class SpotifyAPIRequest {
                 // Parses returned HTTPrequest to an 
                 // auth token using written class method and returns 
                 // a single string 
-                returnedTokenfromJSON = getTokenFromRequestJSON(tokenResponse);
+                returnedTokenfromJSON = getAccessTokenFromRequestJSON(tokenResponse);
                 return returnedTokenfromJSON;
             } 
             // Returns string for debugging if http tokenResponse didn't work
@@ -228,7 +366,7 @@ public class SpotifyAPIRequest {
                 // Parses returned HTTPrequest to an 
                 // auth token using written class method and returns 
                 // a single string 
-                returnedTokenfromJSON = getTokenFromRequestJSON(tokenResponse);
+                returnedTokenfromJSON = getAccessTokenFromRequestJSON(tokenResponse);
                 return returnedTokenfromJSON;
             } 
             // Returns string for debugging if http tokenResponse didn't work
@@ -426,7 +564,7 @@ public class SpotifyAPIRequest {
         Http binding = new Http();
         HttpResponse createPlaylistResponse = binding.send(request);
 
-        if (createPlaylistResponse.getStatusCode() == 200) {
+        if (createPlaylistResponse.getStatusCode() == 200 || createPlaylistResponse.getStatusCode() == 201) {
             String playlistResponseBody = createPlaylistResponse.getBody();
             PlaylistClass userCreatedPlayist = getPlaylist(playlistResponseBody);
             List<PlaylistClass> returnPlaylistList = new List<PlaylistClass>();
