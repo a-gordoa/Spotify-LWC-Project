@@ -1,10 +1,13 @@
 import { LightningElement, wire } from 'lwc';
-import calloutForAccessAndRefreshToken from '@salesforce/apex/SpotifyAPIRequest.calloutForAccessAndRefreshToken';
 import createPlaylist from '@salesforce/apex/SpotifyAPIRequest.createPlaylist';
 import getRefreshedAccessToken from '@salesforce/apex/SpotifyAPIRequest.getRefreshedAccessToken';
 
 export default class PlaylistCreatorInitialInput extends LightningElement {
-
+    
+    // Values to store the ID and Name for the playlst the user created
+    createdPlaylistID;
+    createdPlaylistName;
+    newlyCreatedPlaylist; //PlaylistClass object
 
     // stored values that are loaded via the connectedCallback() to be passed
     // to Spotify when making calls to the API
@@ -40,8 +43,7 @@ export default class PlaylistCreatorInitialInput extends LightningElement {
         this.playlistDescription = event.target.value;
     }
 
-    newlyCreatedPlaylist;
-    createPlaylistError;
+
     appAccountID = '31xsewkexphjzpb4zw2kk3yitrcq'; 
     personalAccountID = '12820729'; 
     submitted = false;
@@ -50,19 +52,33 @@ export default class PlaylistCreatorInitialInput extends LightningElement {
         
         createPlaylist({name: this.playlistName, description: this.playlistDescription ,  publicBool: this.playlistPublicCheckbox,  spotUserId: this.personalAccountID,  token: this.access_token})
             .then((result) => {
-                console.log()
-                console.log('PL should be created');
-                this.newlyCreatedPlaylist = result;
+                
+                // Assigns the returned List<PlaylistClass> to a local object.
+                // The newlyCreatedPlaylist contains an id and name value
+                this.newlyCreatedPlaylist = result[0];
+
                 this.error = undefined;
-                console.log('PL '+this.newlyCreatedPlaylist);
-                console.log('PL Name '+this.newlyCreatedPlaylist.name);
+
+                console.log('Made it to result ' + JSON.stringify(this.newlyCreatedPlaylist))
+
+                // sends info in the detail object of the custom event to 
+                // playlistCreator component, so that it can be transfered to the 
+                // embededPlaylist child component 
+                const playlistCreatedEvent = new CustomEvent('playlistcreated', 
+                {detail: 
+                    {
+                        id : this.newlyCreatedPlaylist.id,
+                        iframeURL : String('https://open.spotify.com/embed/playlist/' + this.newlyCreatedPlaylist.id),
+                        name : this.newlyCreatedPlaylist.name
+                    }
+                });
+                this.dispatchEvent(playlistCreatedEvent);
+
             })
             .catch((error) => {
-                console.log('!!!!!error message: ' + error.message + 'error name: ' + error.name + 'error stack: ' + error.stack);
-                this.createPlaylistError = error;
+                console.log('CreatePlaylist Error message: ' + error.message + 'error name: ' + error.name + 'error stack: ' + error.stack);
                 this.newlyCreatedPlaylist = undefined;
             });
-            console.log('MADE IT2');
     }
 
     

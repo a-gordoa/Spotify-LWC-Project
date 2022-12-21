@@ -1,4 +1,4 @@
-import { LightningElement, wire } from 'lwc';
+import { LightningElement, api } from 'lwc';
 import calloutForAccessAndRefreshToken from '@salesforce/apex/SpotifyAPIRequest.calloutForAccessAndRefreshToken';
 import createPlaylist from '@salesforce/apex/SpotifyAPIRequest.createPlaylist';
 import getRefreshedAccessToken from '@salesforce/apex/SpotifyAPIRequest.getRefreshedAccessToken';
@@ -8,6 +8,29 @@ import getRefreshedAccessToken from '@salesforce/apex/SpotifyAPIRequest.getRefre
 export default class PlaylistCreator extends LightningElement {
 
 
+    // Handles the event from the child component passing in the 
+    // id/token for the playlist created by the user
+    @api
+    playlistToken;
+
+    @api
+    iframeURL;
+
+    @api
+    doneLoading;
+
+
+
+    handleCreatedPlaylist(event){
+        
+        // assigns the object values from the playlistcreated 
+        // custom event that was sent from playlistCreatorInitialInput.js
+        this.playlistToken = event.detail.id;
+        console.log('Parent JS file. Token: ' + this.playlistToken);
+        this.iframeURL = event.detail.iframeURL;
+        this.doneLoading = true;
+
+    }
 
 
 }

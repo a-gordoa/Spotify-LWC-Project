@@ -387,6 +387,7 @@ public class SpotifyAPIRequest {
         system.debug('Made it togetPlaylist');
         // Formats authToken to be sent in HttpRequest
         String authToken = 'Bearer'+' '+  returnAuthToken();
+        system.debug('authToken = ' + authToken);
         
         // Formatted to get the following from Spotify
         // Name, External_URL (playlist url), Owners Name, Owners URL 
@@ -398,12 +399,14 @@ public class SpotifyAPIRequest {
         // Binds required info for the call to the HttpRequest
         HttpRequest request = new HttpRequest();
         request.setEndpoint('https://api.spotify.com/v1/playlists/' + token + fieldsToRetrieve);
+        system.debug('Endpoint ' + request.getEndpoint());
         request.setHeader('Authorization', authToken);
         request.setMethod('GET');
         
 		// Sends HttpRequest to Spotify and gets back a JSON with playlist info 
 		Http binding = new Http();
         HttpResponse playlistResponse = binding.send(request);
+
         
 
         //system.debug(playlistResponse.getBody());
@@ -420,34 +423,50 @@ public class SpotifyAPIRequest {
         }   
     }
 
+    // Pass in a Spotify Playlist Token and get back a Playlist Class. 
+    // The logic in this method handles the conversion from the JSON received
+    // by Spotify's API to the custom Playlist Class
+    // However the HTTP callout is done via the getPlaylistJSON() class
+    // which is called in this method. 
     @AuraEnabled(cacheable=true)
-    public static PlaylistClass getPlaylist(String str) {
+    public static PlaylistClass getPlaylist(String playlistToken) {
 
+        // Stores the original JSON that came back from Spotify
+        String playlistJSON = getPlaylistJSON(playlistToken);
 
-        String playlistJSON = getPlaylistJSON(str);
+        // Uses JSON deserialze to put this into a PlaylisttClass
+        // However more parsing needs to be done manually for the 
+        // inner levels of the original JSON
         Playlistclass playlistObj = getPlaylistClass(playlistJSON);
     
     
+        // This turns the whole JSON into an initial Map with the Key's being the top levels
+        // of the JSON. This will be used to dig down into the lower levels of the JSON
         Map<String, Object> topLevelObj = (Map<String, Object>)JSON.deserializeUntyped(playlistJSON);
-        //System.debug(topLevelStr.get('tracks'));
+        System.debug('topLevelObj = '+ topLevelObj);
+        System.debug('topLevelObj.get(\'tracks\')  = ' + topLevelObj.get('tracks'));
         Object tracksObjForJSON = topLevelObj.get('tracks');
         
+        // This ("Track") is an intermdiate layer that we to turn into an object to get down to the "Item"
+        // level, which is where the actual track data is
         String tracksStr = JSON.serialize(tracksObjForJSON);
-        
         Map<String, Object> tracksObj = (Map<String, Object>)JSON.deserializeUntyped(tracksStr);
+        System.debug('tracksObj = ' + tracksObj);
         
-        
+        // We get Item list from the Track object. The Item list is where the data for individual 
+        // songs within the playlist are held.
         Object itemsObjForJSON = tracksObj.get('items');
+        System.debug('itemsObjForJSON = ' + itemsObjForJSON);
         String itemsStr = JSON.serialize(itemsObjForJSON);
     
-        // to get everything else -----------
+        // Assigns the Item list into a TrackItem class list, which can then be added back to the Playlist Class
         List<TrackItem> trackItemList = (List<TrackItem>)JSON.deserialize(itemsStr, List<TrackItem>.class);
             // assigns TrackItem list that was parsed to the main Playlist obj
             playlistObj.trackList = trackItemList;	
         
         //------------------------------------
     
-        // to get artist name ------------------
+        // to get artist name 
         List<object> listOfItems = (List<object>)JSON.deserializeUntyped(itemsStr);
         
         integer indexOfTrackItemArray = 0;
@@ -488,15 +507,14 @@ public class SpotifyAPIRequest {
             indexOfTrackItemArray++;
             
         }
-        
-        
+ 
         return playlistObj;
-        // List<PlaylistClass> tempPL_List = new List<PlaylistClass>();
-        // tempPL_List.add(playlistObj);
-        // return tempPL_List;
+
     }
     
-    // helper function within getPlaylist()
+    // helper function within getPlaylist() that assigns the values from the top level of
+    // the returned JSON from Spotify. Additional logic is done to get the inner JSON levels assigned
+    // Top level values it assigns: name, description, id
     private static PlaylistClass getPlaylistClass(String jsonString) {
         return (PlaylistClass)JSON.deserialize(jsonString, PlaylistClass.class);
     }
@@ -565,10 +583,18 @@ public class SpotifyAPIRequest {
         HttpResponse createPlaylistResponse = binding.send(request);
 
         if (createPlaylistResponse.getStatusCode() == 200 || createPlaylistResponse.getStatusCode() == 201) {
+            
+            // gets JSON returned from Spotify
             String playlistResponseBody = createPlaylistResponse.getBody();
-            PlaylistClass userCreatedPlayist = getPlaylist(playlistResponseBody);
+
+            // Assigns the top level values (name, id, description) to the 
+            // PlaylistClass obj
+            PlaylistClass userCreatedPlayist = getPlaylistClass(playlistResponseBody);
+
+            // Assigns to List to return to Wire
             List<PlaylistClass> returnPlaylistList = new List<PlaylistClass>();
             returnPlaylistList.add(userCreatedPlayist);
+            system.debug('returnPlaylistList ' + returnPlaylistList);
             return returnPlaylistList;
 
         } else {
