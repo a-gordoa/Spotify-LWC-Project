@@ -10,4 +10,7 @@ export default class EmbededPlaylist extends LightningElement {
 
     @api
     srcUrlFromInputComp = '';
+
+    @api
+    songCounter = 0;
 }

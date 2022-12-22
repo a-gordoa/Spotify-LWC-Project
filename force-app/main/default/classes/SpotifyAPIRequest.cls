@@ -323,6 +323,63 @@ public class SpotifyAPIRequest {
     }
 
 
+    @AuraEnabled(cacheable=true)
+    public static List<Track> performSpotifySearch(String userQuery, String accessToken) {
+
+        // Formatting inputs for HTTP callout
+        String numberOfReusltsToReturn = '10';
+        String encodedQuery = EncodingUtil.urlEncode(userQuery,'UTF-8');     
+        String authToken = 'Bearer ' + accessToken;
+        string payload = 'q=' + encodedQuery + '&type=track&market=US&limit='+numberOfReusltsToReturn+'&offset=0';
+		String endpoint = 'https://api.spotify.com/v1/search?' + payload;
+        
+        // callout
+        HttpRequest request = new HttpRequest();
+        request.setMethod('GET');
+        request.setEndpoint(endpoint);
+        request.setHeader('Accept','application/json');
+        request.setHeader('Content-Type','application/json');
+        request.setHeader('Authorization' , authToken);
+
+        Http binding = new Http();
+        HttpResponse response = binding.send(request);
+
+        system.debug('Status Code = ' + response.getStatusCode());
+
+        String jsonBody = response.getBody();
+        
+
+        // Parsing the returned JSON from the callout
+        Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(jsonBody);
+
+        Map<String, Object> tracksMap = (Map<String, Object>)jsonMap.get('tracks');
+
+        List<Object> itemList = (List<Object>)tracksMap.get('items');
+        system.debug(itemList);
+
+        List<Track> trackList = new List<Track>();
+
+        for (Object iter : itemList){
+            Track tmpTrack = new Track();
+            
+            Map<String, Object> itemMap = (Map<String, Object>) iter;
+            tmpTrack.name = (String)itemMap.get('name');
+            tmpTrack.id = (String)itemMap.get('id');
+            tmpTrack.uri = (String)itemMap.get('uri');
+            
+            Map<String, Object> albumMap = (Map<String, Object>)itemMap.get('album');
+                
+            tmpTrack.albumName = String.valueOf(albumMap.get('name'));
+            trackList.add(tmpTrack);
+            
+            List<Object> artistList = (List<Object>)itemMap.get('artists');
+            Map<String,Object> primaryArtistMap = (Map<String,Object>)artistList.get(0);
+            tmpTrack.primaryArtist = String.valueOf(primaryArtistMap.get('name'));
+            }
+            
+            return trackList;
+    }
+
     @AuraEnabled(cacheable=true) // rename this to reflect that it's an access token, not auth token
     public static String returnAuthToken() {
 
@@ -515,7 +572,7 @@ public class SpotifyAPIRequest {
     // helper function within getPlaylist() that assigns the values from the top level of
     // the returned JSON from Spotify. Additional logic is done to get the inner JSON levels assigned
     // Top level values it assigns: name, description, id
-    private static PlaylistClass getPlaylistClass(String jsonString) {
+    public static PlaylistClass getPlaylistClass(String jsonString) {
         return (PlaylistClass)JSON.deserialize(jsonString, PlaylistClass.class);
     }
 

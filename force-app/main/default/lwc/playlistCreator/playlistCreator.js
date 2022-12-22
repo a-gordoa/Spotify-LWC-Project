@@ -10,14 +10,14 @@ export default class PlaylistCreator extends LightningElement {
 
     // Handles the event from the child component passing in the 
     // id/token for the playlist created by the user
-    @api
+
     playlistToken;
 
-    @api
     iframeURL;
 
-    @api
     doneLoading;
+
+    songCounterForEmbed;
 
 
 
@@ -30,6 +30,11 @@ export default class PlaylistCreator extends LightningElement {
         this.iframeURL = event.detail.iframeURL;
         this.doneLoading = true;
 
+    }
+
+    handleCounter(event) {
+        this.iframeURL = event.detail;
+        console.log(' Counter inside PlaylistCreatr event receiver ' + this.iframeURL);
     }
 
 
