@@ -2,6 +2,7 @@ import { api, LightningElement } from 'lwc';
 import performSpotifySearch from '@salesforce/apex/SpotifyAPIRequest.performSpotifySearch';
 import getRefreshedAccessToken from '@salesforce/apex/SpotifyAPIRequest.getRefreshedAccessToken';
 import addTracksToPlaylist from '@salesforce/apex/SpotifyAPIRequest.addTracksToPlaylist';
+import {createJSONforUris} from 'c/javascriptUtility';
 
 export default class TrackSearchAndInput extends LightningElement {
 
@@ -29,50 +30,27 @@ export default class TrackSearchAndInput extends LightningElement {
     
     // counterToSend is used to append to the iframe src url in the "?n="paramter so that it refreshes after a new song is added
     counterToSend = 0;
-    // selectedTrackUris holds the track URI's that are going to be passed back to the playlist from the users search
-    selectedTrackUris;
-
-    selectedTrackUriObject = {uris:[]};
 
     handleAddTrack(){
-        console.log('MADE IT')
+        console.log('Made it to handleAddTrack')
 
         // stores the rows from the datatable that the user selected
-        let selectedTrackRowArray = this.template.querySelector('lightning-datatable').getSelectedRows(); 
+        var selectedTrackRowArray = this.template.querySelector('lightning-datatable').getSelectedRows(); 
+        console.log('selectedTrackRowArray = ' + selectedTrackRowArray);
 
-        // used to determine it it's the first uri in the array
-        let numIter = 0;    
-        // adds the selected URI's to an object that can be passed to xxxxx() and sent back to Spotify
-        for (const selectedTrackRowIter of selectedTrackRowArray) {
-
-            // selectedTrackRowIter needs the paramter 'uri' (no s on the end)
-            // selectedTrackUriObject needs the paramter 'uris' (with the s on the end)
-            this.selectedTrackUriObject.uris.push(selectedTrackRowIter.uri);
-            
-        }
-
-        console.log('Track URI array: ' + this.selectedTrackUris);
-        console.log('Playlist ID: ' + this.playlistIdFromInputComp);
-        console.log('access_token: ' + this.access_token);
-
-        let trackUriArg = JSON.stringify(this.selectedTrackUriObject);
-        console.log('trackUriArg final string = ' + trackUriArg);
-
-        let localresult;
+        // Utility function converts the obj from the datatable into a JSON that can be used as an argument for 
+        // the spotify api
+        var trackUriArg = createJSONforUris(selectedTrackRowArray);
         
         addTracksToPlaylist({playlstId: this.playlistIdFromInputComp, uriList: trackUriArg, AccessToken: this.access_token })
         .then(result=>{
 
             // clears out the search data in the datatable and search bar
-            this.searchData =null; 
+            this.searchData =null;  
             let input = this.template.querySelector('lightning-input');
             input.value = '';
 
-            // clear the URI array so that it's fresh for the next time a song is added. 
-            this.selectedTrackUriObject.uris = [];
-
             //update iframe URL to appent counterToSend at the end so that it refreshes
-            localresult = result;
             this.counterToSend ++;
             this.dispatchEvent(new CustomEvent('urlupdate', {detail: String('https://open.spotify.com/embed/playlist/'+this.playlistIdFromInputComp+'?n='+this.counterToSend)}))
         })
@@ -82,13 +60,9 @@ export default class TrackSearchAndInput extends LightningElement {
             let input = this.template.querySelector('lightning-input');
             input.value = '';
 
-            // clear the URI array so that it's fresh for the next time a song is added.
-            this.selectedTrackUriObject.uris = [];
-
             alert('Error: ' + error.message + ' error name: ' + error.name);
             console.log('Add tracks to Spotify Error message: ' + error.message + ' error name: ' + error.name + ' error stack: ' + error.stack);
             
-
             this.counterToSend ++;
             this.dispatchEvent(new CustomEvent('urlupdate', {detail: String('https://open.spotify.com/embed/playlist/'+this.playlistIdFromInputComp+'?n='+this.counterToSend)}))
             console.log('Counter from event : ' + this.counterToSend);
@@ -127,14 +101,4 @@ export default class TrackSearchAndInput extends LightningElement {
         // { label: 'Spotify Link', fieldName: 'trackURL', type: 'url'} 
     ];
     
-    
-    testData = [ {
-        id:'1234',
-        name:'Condesa',
-        primaryArtist:'Anza',
-        trackURL:'https://open.spotify.com/artist/4MBMsq0Rj4A4ML79ceMYlu',
-        album:'Tester',
-        followers:'123'
-        }
-    ]
 }
