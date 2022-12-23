@@ -1,9 +1,11 @@
 import { api, LightningElement } from 'lwc';
 import performSpotifySearch from '@salesforce/apex/SpotifyAPIRequest.performSpotifySearch';
 import getRefreshedAccessToken from '@salesforce/apex/SpotifyAPIRequest.getRefreshedAccessToken';
+import addTracksToPlaylist from '@salesforce/apex/SpotifyAPIRequest.addTracksToPlaylist';
 
 export default class TrackSearchAndInput extends LightningElement {
 
+    // Id for the playlist the user created in PlaylistCreatorInitialInput component
     @api
     playlistIdFromInputComp = '';
 
@@ -25,16 +27,78 @@ export default class TrackSearchAndInput extends LightningElement {
 
 
     
+    // counterToSend is used to append to the iframe src url in the "?n="paramter so that it refreshes after a new song is added
     counterToSend = 0;
-    incrementSongCounter() {
-        this.counterToSend ++;
-        this.dispatchEvent(new CustomEvent('urlupdate', {detail: String('https://open.spotify.com/embed/playlist/'+this.playlistIdFromInputComp+'?n='+this.counterToSend)}))
-        console.log('Counter from event : ' + this.counterToSend);
+    // selectedTrackUris holds the track URI's that are going to be passed back to the playlist from the users search
+    selectedTrackUris;
+
+    selectedTrackUriObject = {uris:[]};
+
+    handleAddTrack(){
+        console.log('MADE IT')
+
+        // stores the rows from the datatable that the user selected
+        let selectedTrackRowArray = this.template.querySelector('lightning-datatable').getSelectedRows(); 
+
+        // used to determine it it's the first uri in the array
+        let numIter = 0;    
+        // adds the selected URI's to an object that can be passed to xxxxx() and sent back to Spotify
+        for (const selectedTrackRowIter of selectedTrackRowArray) {
+
+            // selectedTrackRowIter needs the paramter 'uri' (no s on the end)
+            // selectedTrackUriObject needs the paramter 'uris' (with the s on the end)
+            
+            this.selectedTrackUriObject.uris.push(selectedTrackRowIter.uri);
+            
+        }
+
+        console.log('Track URI array: ' + this.selectedTrackUris);
+        console.log('Playlist ID: ' + this.playlistIdFromInputComp);
+        console.log('access_token: ' + this.access_token);
+
+        let trackUriArg = JSON.stringify(this.selectedTrackUriObject);
+        console.log('trackUriArg final string = ' + trackUriArg);
+
+        let localresult;
+        
+        addTracksToPlaylist({playlstId: this.playlistIdFromInputComp, uriList: trackUriArg, AccessToken: this.access_token })
+        .then(result=>{
+            console.log('RESULT = ' + result);
+            console.log('RESULT = ' + JSON.stringify(result));
+            // clear the URI array so that it's fresh for the next time a song is added. 
+            this.selectedTrackUriObject.uris = [];
+
+            console.log('RESULT 2');
+
+            //update iframe URL to appent counterToSend at the end so that it refreshes
+            localresult = result;
+            console.log('RESULT 3');
+            console.log('local RESULT = ' + localresult);
+            this.counterToSend ++;
+            this.dispatchEvent(new CustomEvent('urlupdate', {detail: String('https://open.spotify.com/embed/playlist/'+this.playlistIdFromInputComp+'?n='+this.counterToSend)}))
+            console.log('Counter from event : ' + this.counterToSend);
+        })
+        .catch(error=>{
+            // clear the URI array so that it's fresh for the next time a song is added.
+            this.selectedTrackUriObject.uris = [];
+
+            alert('Error: ' + error.message + ' error name: ' + error.name);
+            console.log('Add tracks to Spotify Error message: ' + error.message + ' error name: ' + error.name + ' error stack: ' + error.stack);
+            
+
+            this.counterToSend ++;
+            this.dispatchEvent(new CustomEvent('urlupdate', {detail: String('https://open.spotify.com/embed/playlist/'+this.playlistIdFromInputComp+'?n='+this.counterToSend)}))
+            console.log('Counter from event : ' + this.counterToSend);
+            
+        })
+
+        
     }
 
 
-    // calls apex class to search Spotify via their api
+    // holds the returned List<Track> result from the Spotifi callout performed in searchSpotifyForTracks()
     searchData;
+    // calls apex class to search Spotify via their api
     searchSpotifyForTracks() {
         performSpotifySearch({userQuery: this.searchText, accessToken: this.access_token})
         .then(result=>{

@@ -1,27 +1,28 @@
 <template>
     
-    playlistIdFromInputComp : {playlistIdFromInputComp}
+    <!-- Search for songs Input -->
     <lightning-card>
-        <lightning-input type="text" label="Search for songs" class="slds-p-around_medium" onchange={handleSongTextInput}></lightning-input>
+        <lightning-input type="text" label="Search for songs" class="slds-var-p-around_medium" onchange={handleSongTextInput}></lightning-input>
 
-        <lightning-button name="Search" label="Search" class="slds-p-left_medium slds-p-bottom_large" onclick={searchSpotifyForTracks}> </lightning-button>
+        <lightning-button name="Search" label="Search" class="slds-var-p-left_medium slds-var-p-bottom_large" onclick={searchSpotifyForTracks}> </lightning-button>
         <br>
     </lightning-card>
-    
 
+    <!-- Search Results Datatable -->
     <lightning-card>
-        <div class="slds-p-around_medium">
+        <div class="slds-var-p-around_medium">
             <lightning-datatable
                     key-field="id"
                     data={searchData}
                     columns={columns}>
-        </lightning-datatable>
+            </lightning-datatable>
         </div>
-        
-
-        <lightning-button name="Counter" label="Add Track" class="slds-p-around_medium" onclick={incrementSongCounter}> </lightning-button>    
+        <!-- Add Track Button -->
+        <lightning-button name="Counter" label="Add Track" class="slds-var-p-around_medium" onclick={handleAddTrack}> </lightning-button>    
     </lightning-card>
 
+
+    
     
 
 
