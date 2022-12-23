@@ -2,10 +2,17 @@
     <lightning-card>
         <p>Playlist Creator Component</p>
 
+
         <div class="slds-grid slds-wrap">
-            <div class="slds-size_5-of-12 slds-var-p-around_medium">
-                <c-playlist-creator-initial-input onplaylistcreated={handleCreatedPlaylist}></c-playlist-creator-initial-input>
-            </div>
+            
+                <div class="slds-size_5-of-12 slds-var-p-around_medium">
+                    <template if:false={doneLoading}>
+                        <c-playlist-creator-initial-input onplaylistcreated={handleCreatedPlaylist}></c-playlist-creator-initial-input>
+                    </template>
+                    <template if:true={doneLoading}>
+                        <c-track-search-and-input playlist-id-from-input-comp={playlistToken} onurlupdate={handleCounter} ></c-track-search-and-input>
+                    </template>
+                </div>
 
             <!-- Embeded Playlist -->
             <div class="slds-size_7-of-12 slds-var-p-around_medium">
@@ -14,7 +21,7 @@
         </div>
 
         
-        <c-track-search-and-input playlist-id-from-input-comp={playlistToken} onurlupdate={handleCounter} ></c-track-search-and-input>
+       
         
     </lightning-card>
 </template>

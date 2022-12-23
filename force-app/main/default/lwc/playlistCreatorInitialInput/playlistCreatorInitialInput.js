@@ -1,6 +1,7 @@
-import { LightningElement, wire } from 'lwc';
+import { LightningElement } from 'lwc';
 import createPlaylist from '@salesforce/apex/SpotifyAPIRequest.createPlaylist';
 import getRefreshedAccessToken from '@salesforce/apex/SpotifyAPIRequest.getRefreshedAccessToken';
+import addTracksToPlaylist from '@salesforce/apex/SpotifyAPIRequest.addTracksToPlaylist';
 
 export default class PlaylistCreatorInitialInput extends LightningElement {
     
@@ -13,6 +14,8 @@ export default class PlaylistCreatorInitialInput extends LightningElement {
     // to Spotify when making calls to the API
     access_token;
     error;
+
+    counterToSend = 0;
 
     // Calls the SpotifyRequestAPI class to get a refreshed Access Token from Spotify when the
     // component loads
@@ -61,18 +64,35 @@ export default class PlaylistCreatorInitialInput extends LightningElement {
 
                 console.log('Made it to result ' + JSON.stringify(this.newlyCreatedPlaylist))
 
-                // sends info in the detail object of the custom event to 
-                // playlistCreator component, so that it can be transfered to the 
-                // embededPlaylist child component 
-                const playlistCreatedEvent = new CustomEvent('playlistcreated', 
-                {detail: 
-                    {
-                        id : this.newlyCreatedPlaylist.id,
-                        iframeURL : String('https://open.spotify.com/embed/playlist/' + this.newlyCreatedPlaylist.id),
-                        name : this.newlyCreatedPlaylist.name
-                    }
-                });
-                this.dispatchEvent(playlistCreatedEvent);
+                // --------------
+                let uriObj = {uris:['spotify:track:1flWFiusGKhIaewrTnCYGO']};
+                let uriString = JSON.stringify(uriObj);
+
+
+                addTracksToPlaylist({playlstId: this.newlyCreatedPlaylist.id , uriList: uriString, AccessToken: this.access_token })
+                .then(result=>{
+                    // sends info in the detail object of the custom event to 
+                    // playlistCreator component, so that it can be transfered to the 
+                    // embededPlaylist child component 
+                    const playlistCreatedEvent = new CustomEvent('playlistcreated', 
+                    {detail: 
+                        {
+                            id : this.newlyCreatedPlaylist.id,
+                            iframeURL : String('https://open.spotify.com/embed/playlist/' + this.newlyCreatedPlaylist.id),
+                            name : this.newlyCreatedPlaylist.name
+                        }
+                    });
+                    this.dispatchEvent(playlistCreatedEvent);
+
+                })
+                .catch(error=>{
+                   
+                    
+                })
+
+                // - ---------------
+
+
 
             })
             .catch((error) => {

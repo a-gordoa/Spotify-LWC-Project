@@ -2,13 +2,13 @@
     <lightning-card>
         
         <lightning-input label="Playlist Name" onchange={handlePlaylistName}></lightning-input>
-        <br>
-        <lightning-input label="Description" onchange={handlePlaylistDescription}></lightning-input>
+        <!-- <br>
+        <lightning-input label="Description" onchange={handlePlaylistDescription}></lightning-input> -->
         <br>
         <lightning-button label="Create Playlist" onclick={handlePlaylistSubmit}></lightning-button>
 
         <template if:true={submitted}>
-            <p> Playlist was submitted</p>
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
         </template>
 
 

@@ -15,7 +15,7 @@ export default class PlaylistCreator extends LightningElement {
 
     iframeURL;
 
-    doneLoading;
+    doneLoading = false;
 
     songCounterForEmbed;
 

@@ -47,7 +47,6 @@ export default class TrackSearchAndInput extends LightningElement {
 
             // selectedTrackRowIter needs the paramter 'uri' (no s on the end)
             // selectedTrackUriObject needs the paramter 'uris' (with the s on the end)
-            
             this.selectedTrackUriObject.uris.push(selectedTrackRowIter.uri);
             
         }
@@ -63,22 +62,26 @@ export default class TrackSearchAndInput extends LightningElement {
         
         addTracksToPlaylist({playlstId: this.playlistIdFromInputComp, uriList: trackUriArg, AccessToken: this.access_token })
         .then(result=>{
-            console.log('RESULT = ' + result);
-            console.log('RESULT = ' + JSON.stringify(result));
+
+            // clears out the search data in the datatable and search bar
+            this.searchData =null; 
+            let input = this.template.querySelector('lightning-input');
+            input.value = '';
+
             // clear the URI array so that it's fresh for the next time a song is added. 
             this.selectedTrackUriObject.uris = [];
 
-            console.log('RESULT 2');
-
             //update iframe URL to appent counterToSend at the end so that it refreshes
             localresult = result;
-            console.log('RESULT 3');
-            console.log('local RESULT = ' + localresult);
             this.counterToSend ++;
             this.dispatchEvent(new CustomEvent('urlupdate', {detail: String('https://open.spotify.com/embed/playlist/'+this.playlistIdFromInputComp+'?n='+this.counterToSend)}))
-            console.log('Counter from event : ' + this.counterToSend);
         })
         .catch(error=>{
+            // clears out the search data in the datatable and search bar
+            this.searchData =null;
+            let input = this.template.querySelector('lightning-input');
+            input.value = '';
+
             // clear the URI array so that it's fresh for the next time a song is added.
             this.selectedTrackUriObject.uris = [];
 
