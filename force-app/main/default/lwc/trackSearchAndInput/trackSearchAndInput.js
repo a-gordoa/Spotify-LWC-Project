@@ -24,6 +24,7 @@ export default class TrackSearchAndInput extends LightningElement {
     showAddTrackSpinner = false;
 
     showRemoveTrackDatatable = false;
+    showModal = false;
 
     playlistTrackListForRemoveDatatable;
 
@@ -45,6 +46,7 @@ export default class TrackSearchAndInput extends LightningElement {
     handleHideRemoveTrackDatatable(event){
         console.log(' MADE IT TO handleHideRemoveTrackDatatable. Event.detail = ' + event.detail);
         this.showRemoveTrackDatatable = event.detail;
+        this.showModal = event.detail;
     }
     
     // counterToSend is used to append to the iframe src url in the "?n="paramter so that it refreshes after a new song is added
@@ -141,6 +143,7 @@ export default class TrackSearchAndInput extends LightningElement {
             this.playlistTrackListForRemoveDatatable = result;
             console.log('123 this.playlistTrackListForRemoveDatatable = ' + JSON.stringify(this.playlistTrackListForRemoveDatatable));
             this.showRemoveTrackDatatable = true;
+            this.showModal = true;
             console.log('123 this.showRemoveTrackDatatable = ' + this.showRemoveTrackDatatable);
             // refreshApex(this.playlistTrackListForRemoveDatatable)
             // .then(() => {
@@ -153,6 +156,14 @@ export default class TrackSearchAndInput extends LightningElement {
         })
     }
 
+
+    showModalHandler() {
+        if (this.showModal === true) {
+            this.showModal = false;
+        } else {
+            this.showModal = true;
+        }
+    }
     // columns for datatable
     columns = [
         { label: 'Song Name', fieldName: 'name' },
