@@ -1,0 +1,15 @@
+<template>
+
+    <lightning-card>
+        <div class="slds-var-p-around_medium">
+            <!-- data=trackListForDatatable -->
+            <lightning-datatable 
+            key-field="id"
+            data={trackListForDatatable}
+            columns={columns}>
+            </lightning-datatable>    
+            <lightning-button name="Remove" label="Remove" class="slds-var-p-left_medium slds-var-p-bottom_large" onclick={handleRemoveTracks}> </lightning-button>
+        </div>
+    </lightning-card>
+    
+</template>

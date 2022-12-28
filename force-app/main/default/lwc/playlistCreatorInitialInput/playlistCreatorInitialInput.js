@@ -1,7 +1,7 @@
 import { LightningElement } from 'lwc';
 import createPlaylist from '@salesforce/apex/SpotifyAPIRequest.createPlaylist';
 import getRefreshedAccessToken from '@salesforce/apex/SpotifyAPIRequest.getRefreshedAccessToken';
-import addTracksToPlaylist from '@salesforce/apex/SpotifyAPIRequest.addTracksToPlaylist';
+import addOrDeleteTracksFromPlaylist from '@salesforce/apex/SpotifyAPIRequest.addOrDeleteTracksFromPlaylist';
 
 export default class PlaylistCreatorInitialInput extends LightningElement {
     
@@ -46,7 +46,7 @@ export default class PlaylistCreatorInitialInput extends LightningElement {
         this.playlistDescription = event.target.value;
     }
 
-
+    // these are the Spotify user ID's that can be passed into the CreratePlaylist method. 
     appAccountID = '31xsewkexphjzpb4zw2kk3yitrcq'; 
     personalAccountID = '12820729'; 
     submitted = false;
@@ -69,7 +69,7 @@ export default class PlaylistCreatorInitialInput extends LightningElement {
                 let uriString = JSON.stringify(uriObj);
 
 
-                addTracksToPlaylist({playlstId: this.newlyCreatedPlaylist.id , uriList: uriString, AccessToken: this.access_token })
+                addOrDeleteTracksFromPlaylist({playlstId: this.newlyCreatedPlaylist.id , uriList: uriString, AccessToken: this.access_token, add_or_delete: 'add'})
                 .then(result=>{
                     // sends info in the detail object of the custom event to 
                     // playlistCreator component, so that it can be transfered to the 
@@ -86,7 +86,8 @@ export default class PlaylistCreatorInitialInput extends LightningElement {
 
                 })
                 .catch(error=>{
-                   
+                    console.log('addOrDeleteTracksFromPlaylist Error message: ' + error.message + 'error name: ' + error.name + 'error stack: ' + error.stack);
+                    this.newlyCreatedPlaylist = undefined;
                     
                 })
 

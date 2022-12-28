@@ -1,29 +1,55 @@
 <template>
+    trackSearchAndInputComponent
+    <!-- Search for songs Input -->
+    <!-- slds-size_1-of-2 -->
     
+    <!-- Track Remover Component -->
+    <template if:true={showRemoveTrackDatatable}>
+        <lightning-card>
+            <c-track-remover track-list-for-datatable={playlistTrackListForRemoveDatatable} playlist-id={playlistIdFromInputComp} access-token={access_token} ></c-track-remover>
+        </lightning-card>
+    </template>
+    
+
     <!-- Search for songs Input -->
     <lightning-card>
+        
+        <!-- Remove Tracks Button -->
+        <lightning-button name="removeTracks" label="Remove Tracks" class="slds-var-p-around_medium slds-text-align_right" onclick={handleShowRemoveTrackDatatable}> </lightning-button>
+
+        <br>
+        <!-- Search Input -->
         <lightning-input type="text" label="Search for songs" class="slds-var-p-around_medium" onchange={handleSongTextInput}></lightning-input>
 
+        <!-- Search Button -->
         <lightning-button name="Search" label="Search" class="slds-var-p-left_medium slds-var-p-bottom_large" onclick={searchSpotifyForTracks}> </lightning-button>
+        
         <br>
+        <!-- Spinner -->
+        <template if:true={showSearchSpinner}>
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+        </template>
+
     </lightning-card>
 
     <!-- Search Results Datatable -->
-    <lightning-card>
-        <div class="slds-var-p-around_medium">
-            <lightning-datatable
-                    key-field="id"
-                    data={searchData}
-                    columns={columns}>
-            </lightning-datatable>
-        </div>
-        <!-- Add Track Button -->
-        <lightning-button name="Counter" label="Add Track" class="slds-var-p-around_medium" onclick={handleAddTrack}> </lightning-button>    
-    </lightning-card>
+    <template if:true={showSearchResultsTable}>
+        <lightning-card>
+            <div class="slds-var-p-around_medium">
+                <!-- Spinner -->
+                <template if:true={showAddTrackSpinner}>
+                    <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                </template>
 
-
-    
-    
-
-
+                <!-- Datatable showing results -->
+                <lightning-datatable
+                        key-field="id"
+                        data={searchData}
+                        columns={columns}>
+                </lightning-datatable>
+            </div>
+            <!-- Add Track Button -->
+            <lightning-button name="Counter" label="Add Track" class="slds-var-p-around_medium" onclick={handleAddTrack}> </lightning-button>    
+        </lightning-card>
+    </template>
 </template>

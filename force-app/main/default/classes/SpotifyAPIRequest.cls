@@ -154,7 +154,16 @@ public class SpotifyAPIRequest {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<boolean> addTracksToPlaylist(String playlstId, String uriList, String AccessToken) {
+    public static List<boolean> addOrDeleteTracksFromPlaylist(String playlstId, String uriList, String AccessToken, String add_or_delete) {
+
+        // converts input to proper method for http callout
+        String method = '';
+        if (add_or_delete == 'add') {
+            method = 'POST';
+        } else if (add_or_delete == 'delete') {
+            method = 'DELETE';
+        }
+        system.debug('method = ' + method);
 
         // Formatting inputs for HTTP callout
         String authToken = 'Bearer ' + accessToken;
@@ -165,7 +174,7 @@ public class SpotifyAPIRequest {
 
         // callout
         HttpRequest request = new HttpRequest();
-        request.setMethod('POST');
+        request.setMethod(method);
         request.setEndpoint(endpoint);
         request.setHeader('Accept','application/json');
         request.setHeader('Content-Type','application/json');
@@ -190,9 +199,102 @@ public class SpotifyAPIRequest {
             throw e;
             //return false;
         }
+    }
+
+    @AuraEnabled//(cacheable=true)
+    public static List<Track> getTrackListFromPlaylist(String token){
+
+        String playlistJSON = getPlaylistJSON(token);
+
+
+        // traversing down the json to get to the track info 
+        Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(playlistJSON);
+        system.debug(jsonMap);
+
+        // traversing down the json to get to the track info 
+        Map<String, Object> tracksMap = (Map<String, Object>)jsonMap.get('tracks');
+        system.debug(tracksMap);
+
+        // list to iter over and prase the track info from. 
+        List<Object> itemsList = (List<Object>)tracksMap.get('items');
+        system.debug(itemsList);
+
+        // track list that will be returned
+        List<Track> trackList = new List<Track>();
+
+        // parsing the itemsList to fill the trackList, which is what will be returned
+        for (Object iter : itemsList) {
+            
+
+            // traverse down the top level of the map to the get to the
+            // track info 
+            Map<String,Object> itemObj = (Map<String,Object>)iter;
+            system.debug('itemObj: ' + itemObj);
+            Map<String,Object> trackMap = (Map<String,Object>)itemObj.get('track');
+            system.debug('trackMap: ' + trackMap);
+            
+            // parse the album map
+            Map<String,Object> albumMap = (Map<String,Object>)trackMap.get('album');
+            
+            // parse list that holds the artist map
+            List<Object> artistsList = (List<Object>)albumMap.get('artists');
+            Map<String,Object> artistMap = (Map<String,Object>)artistsList.get(0);
+
+            Track tmpTrack = new Track();
+            tmpTrack.name = String.valueOf(trackMap.get('name'));
+            tmpTrack.uri = String.valueOf(trackMap.get('uri'));
+            tmpTrack.id = String.valueOf(trackMap.get('id'));
+            tmpTrack.albumName = String.valueOf(albumMap.get('name'));
+            tmpTrack.primaryArtist = String.valueOf(artistMap.get('name'));
+
+            trackList.add(tmpTrack);
+
+            system.debug('tmpTrack = ' + tmpTrack);
+        }
+
+        return trackList;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static String getPlaylistJSON(String token) {
+
+        system.debug('Made it togetPlaylist');
+        // Formats authToken to be sent in HttpRequest
+        String authToken = 'Bearer'+' '+  returnAuthToken();
+        system.debug('authToken = ' + authToken);
+        
+        // Formatted to get the following from Spotify
+        // Name, External_URL (playlist url), Owners Name, Owners URL 
+        // Owner Id, Follower Count, Playlist Description 
+        // Query below is what was used in Spotify Dev Consol 
+        // tracks,name,external_urls,owner(display_name,id),followers(total),description,images
+        String fieldsToRetrieve = '?fields=tracks%2Cname%2Cexternal_urls%2Cowner(display_name%2Cid)%2Cfollowers(total)%2Cdescription%2Cimages';
+                             
+        // Binds required info for the call to the HttpRequest
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint('https://api.spotify.com/v1/playlists/' + token + fieldsToRetrieve);
+        system.debug('Endpoint ' + request.getEndpoint());
+        request.setHeader('Authorization', authToken);
+        request.setMethod('GET');
+        
+		// Sends HttpRequest to Spotify and gets back a JSON with playlist info 
+		Http binding = new Http();
+        HttpResponse playlistResponse = binding.send(request);
 
         
 
+        //system.debug(playlistResponse.getBody());
+        if (playlistResponse.getStatusCode() == 200 || playlistResponse.getStatusCode() == 201) {
+            
+            string str = playlistResponse.getBody();
+            return str;
+            
+        } else {
+
+            CalloutException e = new CalloutException();
+            e.setMessage('This is a constructed exception! Status Code: ' + playlistResponse.getStatusCode());
+            throw e;
+        }   
     }
 
     /* ------------------------------------------------------------------------
@@ -342,47 +444,7 @@ public class SpotifyAPIRequest {
         return playlistObj;
     }
 
-    @AuraEnabled
-    public static string getPlaylistJSON(String token) {
 
-        system.debug('Made it togetPlaylist');
-        // Formats authToken to be sent in HttpRequest
-        String authToken = 'Bearer'+' '+  returnAuthToken();
-        system.debug('authToken = ' + authToken);
-        
-        // Formatted to get the following from Spotify
-        // Name, External_URL (playlist url), Owners Name, Owners URL 
-        // Owner Id, Follower Count, Playlist Description 
-        // Query below is what was used in Spotify Dev Consol 
-        // tracks,name,external_urls,owner(display_name,id),followers(total),description,images
-        String fieldsToRetrieve = '?fields=tracks%2Cname%2Cexternal_urls%2Cowner(display_name%2Cid)%2Cfollowers(total)%2Cdescription%2Cimages';
-                             
-        // Binds required info for the call to the HttpRequest
-        HttpRequest request = new HttpRequest();
-        request.setEndpoint('https://api.spotify.com/v1/playlists/' + token + fieldsToRetrieve);
-        system.debug('Endpoint ' + request.getEndpoint());
-        request.setHeader('Authorization', authToken);
-        request.setMethod('GET');
-        
-		// Sends HttpRequest to Spotify and gets back a JSON with playlist info 
-		Http binding = new Http();
-        HttpResponse playlistResponse = binding.send(request);
-
-        
-
-        //system.debug(playlistResponse.getBody());
-        if (playlistResponse.getStatusCode() == 200) {
-            
-            string str = playlistResponse.getBody();
-            return str;
-            
-        } else {
-
-            CalloutException e = new CalloutException();
-            e.setMessage('This is a constructed exception! Status Code: ' + playlistResponse.getStatusCode());
-            throw e;
-        }   
-    }
 
     /* ------------------------------------------------------------------------
         Spotify Access Token/Auth Token Classes
