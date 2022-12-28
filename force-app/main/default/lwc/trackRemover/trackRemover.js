@@ -33,7 +33,8 @@ export default class TrackRemover extends LightningElement {
         addOrDeleteTracksFromPlaylist({playlstId: this.playlistId , uriList: this.trackUriArg , AccessToken: this.accessToken , add_or_delete: 'delete'})
         .then(result=>{
 
-            console.log('trackListForDatatable = ' + JSON.stringify(trackListForDatatable));
+            this.trackListForDatatable = [];
+            console.log('trackListForDatatable = ' + JSON.stringify(this.trackListForDatatable));
             // console.log('addOrDeleteTracksFromPlaylist = Success');
             // console.log('addOrDeleteTracksFromPlaylist result = ' +  JSON.stringify(result));
 
@@ -43,6 +44,8 @@ export default class TrackRemover extends LightningElement {
             let urlToSend = String('https://open.spotify.com/embed/playlist/'+this.playlistId+'?n='+this.counterToSend)
             console.log('urlToSend = ' + urlToSend);
             this.dispatchEvent(new CustomEvent('urlupdate', {detail: urlToSend, bubbles: true, composed: true}));
+
+            this.dispatchEvent(new CustomEvent('hideremovetrackdatatable',{detail:false}));
         })
         .catch(error=>{
             alert('Error: ' + error.message + ' error name: ' + error.name);

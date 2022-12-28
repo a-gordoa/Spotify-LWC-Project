@@ -6,7 +6,7 @@
     <!-- Track Remover Component -->
     <template if:true={showRemoveTrackDatatable}>
         <lightning-card>
-            <c-track-remover track-list-for-datatable={playlistTrackListForRemoveDatatable} playlist-id={playlistIdFromInputComp} access-token={access_token} ></c-track-remover>
+            <c-track-remover track-list-for-datatable={playlistTrackListForRemoveDatatable} playlist-id={playlistIdFromInputComp} access-token={access_token} onhideremovetrackdatatable={handleHideRemoveTrackDatatable} ></c-track-remover>
         </lightning-card>
     </template>
     

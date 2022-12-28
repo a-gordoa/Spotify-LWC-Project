@@ -17,7 +17,7 @@ export default class TrackSearchAndInput extends LightningElement {
 
     showSearchResultsTable = false;
 
-    showRemoveTable = true;
+    //showRemoveTable = true;
 
     showSearchSpinner = false;
 
@@ -32,16 +32,20 @@ export default class TrackSearchAndInput extends LightningElement {
         getRefreshedAccessToken()
         .then(result =>{
             this.access_token = result[0];
-            console.log('result = ' + result);
-            console.log('this.access_token = ' + this.access_token);
+            // console.log('result = ' + result);
+            // console.log('this.access_token = ' + this.access_token);
         })
         .catch(error=>{
             this.error = error;
-            console.log(error);
+            console.log('Connected Callback getRefreshedAccessToken Error message: ' + error.message + ' error name: ' + error.name + ' error stack: ' + error.stack);
         })
     }
 
 
+    handleHideRemoveTrackDatatable(event){
+        console.log(' MADE IT TO handleHideRemoveTrackDatatable. Event.detail = ' + event.detail);
+        this.showRemoveTrackDatatable = event.detail;
+    }
     
     // counterToSend is used to append to the iframe src url in the "?n="paramter so that it refreshes after a new song is added
     counterToSend = 0;
@@ -133,9 +137,11 @@ export default class TrackSearchAndInput extends LightningElement {
 
         getTrackListFromPlaylist({token: this.playlistIdFromInputComp})
         .then(result=>{
-            console.log('getTrackListFromPlaylist result ' + JSON.stringify(result));
+            console.log('123 getTrackListFromPlaylist result ' + JSON.stringify(result));
             this.playlistTrackListForRemoveDatatable = result;
+            console.log('123 this.playlistTrackListForRemoveDatatable = ' + JSON.stringify(this.playlistTrackListForRemoveDatatable));
             this.showRemoveTrackDatatable = true;
+            console.log('123 this.showRemoveTrackDatatable = ' + this.showRemoveTrackDatatable);
             // refreshApex(this.playlistTrackListForRemoveDatatable)
             // .then(() => {
             //     console.log('Made it pased RefreshApex() + this.playlistTrackListForRemoveDatatable = ' + this.playlistTrackListForRemoveDatatable);

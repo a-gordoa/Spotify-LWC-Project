@@ -167,9 +167,7 @@ public class SpotifyAPIRequest {
 
         // Formatting inputs for HTTP callout
         String authToken = 'Bearer ' + accessToken;
-		//String endpoint = 'https://api.spotify.com/v1/playlists/' + playlstId +'/tracks?uris='+  uriList;
         String endpoint = 'https://api.spotify.com/v1/playlists/' + playlstId+'/tracks';
-        //String body = '{"uris": ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh","spotify:track:1301WleyT98MSxVHPZCA6M", "spotify:episode:512ojhOuo1ktJprKbVcKyQ"]}';
         system.debug('uriList = ' + uriList);
 
         // callout
@@ -255,7 +253,7 @@ public class SpotifyAPIRequest {
         return trackList;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled//(cacheable=true)
     public static String getPlaylistJSON(String token) {
 
         system.debug('Made it togetPlaylist');
