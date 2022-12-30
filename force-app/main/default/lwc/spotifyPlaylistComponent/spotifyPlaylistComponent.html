@@ -1,0 +1,72 @@
+<template>
+    <lightning-card>
+        <div class="slds-m-around_medium">
+            <lightning-input type="toggle" 
+            label="Within you browser, are you logged into a Spotify Premium account? " 
+            onchange={handleToggle} 
+            checked={IsActive} 
+            name="premiumToggle"
+            message-toggle-active="Yes"
+            message-toggle-inactive="No"
+            >
+        
+            </lightning-input>
+            <button name="removeTracks" class="slds-button slds-text-align_right" onclick={showModalHandler} >Why do I need to specify if I have a Spotify Premium account?</button>
+        </div>
+        
+    </lightning-card>
+
+    <template if:true={toggleValue}>
+        <c-playlist-creator></c-playlist-creator>
+    </template>
+
+    <template if:false={toggleValue}>
+        <c-playlist-creator-without-spotify-account></c-playlist-creator-without-spotify-account>
+    </template>
+    
+    
+
+     <!-- Explainer Modal -->
+     <section if:true={showModal} role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+			<div class="slds-modal__header">
+                <!-- X Button on top -->
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={showModalHandler}>
+                    <!--  -->
+                    <lightning-icon icon-name="utility:close"
+                        alternative-text="close"
+                        variant="inverse"
+                        size="small" ></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                
+                <!--  Header title -->
+                <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Why do I need to specify if I have a Spotify Premium account?</h1>
+                <!-- Modal Text Body -->
+                <div class="slds-clearfix">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={showModalHandler}>
+                        <!--  -->
+                        <lightning-icon icon-name="utility:close"
+                            alternative-text="close"
+                            variant="inverse"
+                            size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <div >
+                        <br>
+                        <p>The overall functionality of the app will work whether or not you have Spotify Premium.</p>
+                        <br>
+                        <p>However, the embedded playlist feature will not work properly without a Spotify Premium account. </p>
+                        <br>
+                        <p>To account for this, I’ve created two components, one that uses an embedded iframe to show updates to the playlist (for those with Spotify Premium), and one that uses a datatable to reflect changes (for those without Spotify Premium) </p>
+                    </div>
+                </div>
+			</div>
+        </div>
+        
+    </section>
+    <!-- This is the grey background  for the modal -->
+    <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>  
+
+    
+</template>

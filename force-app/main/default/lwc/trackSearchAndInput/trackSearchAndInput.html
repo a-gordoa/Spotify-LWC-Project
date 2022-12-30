@@ -1,8 +1,5 @@
 <template>
-    trackSearchAndInputComponent
-    <!-- Search for songs Input -->
-    <!-- slds-size_1-of-2 -->
-    
+  
     <!-- Track Remover Component -->
     <section if:true={showModal} role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
         <div class="slds-modal__container">
@@ -30,15 +27,14 @@
         
     </section>
     <!-- This is the grey background  for the modal -->
-    <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
-    
-    
+    <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>  
 
     <!-- Search for songs Input -->
     <lightning-card>
         
         <!-- Remove Tracks Button -->
-        <lightning-button name="removeTracks" label="Remove Tracks" class="slds-var-p-around_medium slds-text-align_right" onclick={handleShowRemoveTrackDatatable}> </lightning-button>
+        <!-- <lightning-button name="removeTracks" label="Remove Tracks" class="slds-var-p-around_medium slds-text-align_right" onclick={handleShowRemoveTrackDatatable}> </lightning-button> -->
+        <button name="removeTracks" class="slds-button slds-text-align_right" onclick={handleShowRemoveTrackDatatable}>Remove Track</button>
 
         <br>
         <!-- Search Input -->
