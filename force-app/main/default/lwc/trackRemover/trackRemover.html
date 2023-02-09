@@ -7,8 +7,11 @@
             key-field="id"
             data={trackListForDatatable}
             columns={columns}>
-            </lightning-datatable>    
-            <lightning-button name="Remove" label="Remove" class="slds-var-p-left_medium slds-var-p-bottom_large" onclick={handleRemoveTracks}> </lightning-button>
+            </lightning-datatable>
+            <div class="slds-m-top_large">
+                <lightning-button name="Remove" label="Remove" class="slds-var-p-left_medium slds-var-p-bottom_large" onclick={handleRemoveTracks}> </lightning-button>
+            </div>    
+            
         </div>
     </lightning-card>
     

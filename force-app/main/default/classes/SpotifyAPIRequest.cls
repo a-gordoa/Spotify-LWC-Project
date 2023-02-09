@@ -100,7 +100,7 @@ public class SpotifyAPIRequest {
     public static List<Track> performSpotifySearch(String userQuery, String accessToken) {
 
         // Formatting inputs for HTTP callout
-        String numberOfReusltsToReturn = '3';
+        String numberOfReusltsToReturn = '10';
         String encodedQuery = EncodingUtil.urlEncode(userQuery,'UTF-8');     
         String authToken = 'Bearer ' + accessToken;
         string payload = 'q=' + encodedQuery + '&type=track&market=US&limit='+numberOfReusltsToReturn+'&offset=0';

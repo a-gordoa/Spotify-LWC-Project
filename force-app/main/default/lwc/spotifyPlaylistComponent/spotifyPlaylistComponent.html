@@ -11,8 +11,12 @@
             >
         
             </lightning-input>
-            <button name="removeTracks" class="slds-button slds-text-align_right" onclick={showModalHandler} >Why do I need to specify if I have a Spotify Premium account?</button>
+            <button name="accountQuestion" class="slds-button slds-text-align_right" onclick={showModalHandler} >Why do I need to specify if I have a Spotify Premium account?</button>
+            <br>
+            <button name="instructions" class="slds-button slds-text-align_right" onclick={showInstructionsHandler} >Instructions</button>
         </div>
+
+        
         
     </lightning-card>
 
@@ -29,9 +33,9 @@
      <!-- Explainer Modal -->
      <section if:true={showModal} role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
         <div class="slds-modal__container">
-			<div class="slds-modal__header">
+			<div class="slds-modal__header" >
                 <!-- X Button on top -->
-                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={showModalHandler}>
+                <button class="slds-button slds-button_icon slds-button_icon-border slds-modal__close" title="Close" onclick={showModalHandler}>
                     <!--  -->
                     <lightning-icon icon-name="utility:close"
                         alternative-text="close"
@@ -44,7 +48,7 @@
                 <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Why do I need to specify if I have a Spotify Premium account?</h1>
                 <!-- Modal Text Body -->
                 <div class="slds-clearfix">
-                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={showModalHandler}>
+                    <button class="slds-button slds-button_icon slds-button_icon-border slds-modal__close" title="Close" onclick={showModalHandler}>
                         <!--  -->
                         <lightning-icon icon-name="utility:close"
                             alternative-text="close"
@@ -56,17 +60,67 @@
                         <br>
                         <p>The overall functionality of the app will work whether or not you have Spotify Premium.</p>
                         <br>
-                        <p>However, the embedded playlist feature will not work properly without a Spotify Premium account. </p>
-                        <br>
-                        <p>To account for this, I’ve created two components, one that uses an embedded iframe to show updates to the playlist (for those with Spotify Premium), and one that uses a datatable to reflect changes (for those without Spotify Premium) </p>
+                        <p>However, the iFrame UI won't work without a Spotify Premium account, so to account for this I’ve created two versions of the component, one that uses an embedded iframe to show updates to the playlist (for those with Spotify Premium), and one that uses a datatable to reflect changes (for those without Spotify Premium) </p>
                     </div>
+                    <div class="slds-m-around_medium">
+                        <lightning-button variant="brand" label="Close" title="Close" onclick={showModalHandler} class="slds-float_right"></lightning-button>
+                    </div>
+                    
                 </div>
 			</div>
         </div>
         
     </section>
     <!-- This is the grey background  for the modal -->
-    <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>  
+    <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+    
+    
+    <!-- Insturctions Modal -->
+    <section if:true={showInstructions} role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+			<div class="slds-modal__header" >
+                <!-- X Button on top -->
+                <button class="slds-button slds-button_icon slds-button_icon-border slds-modal__close" title="Close" onclick={showInstructionsHandler}>
+                    <!--  -->
+                    <lightning-icon icon-name="utility:close"
+                        alternative-text="close"
+                        variant="inverse"
+                        size="small" ></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                
+                <!--  Header title -->
+                <h1 id="modal-heading-02" class="slds-modal__title slds-hyphenate">Instructions</h1>
+                <!-- Modal Text Body -->
+                <div class="slds-clearfix">
+                    <button class="slds-button slds-button_icon slds-button_icon-border slds-modal__close" title="Close" onclick={showInstructionsHandler}>
+                        <!--  -->
+                        <lightning-icon icon-name="utility:close"
+                            alternative-text="close"
+                            variant="inverse"
+                            size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <div >
+                        <ul class="slds-list_ordered">
+                            <li>Enter the playlist name when promoted by the screen. This will create a public playlist on my Spotify account.</li>
+                            <li>Once the playlist is created, use the Search Bar to search Spotify for songs to add to the playlist. (These results are coming directly from Spotify via a callout to their API)</li>
+                            <li>Select the songs you’d like to add to the playlist and press the “Add Track” button to your selection to the playlist you created. </li>
+                            <li>To remove songs, select the “Remove Track” button, which will bring up a modal that prompts you to select which songs you’d like to remove from the playlist. You can either hit “Remove” to remove them, or “Cancel” to close out of the modal without removing any songs. </li>
+                        </ul>
+                    </div>
+                    <div class="slds-m-around_medium">
+                        <lightning-button variant="brand" label="Close" title="Close" onclick={showInstructionsHandler} class="slds-float_right"></lightning-button>
+                    </div>
+                    
+                </div>
+			</div>
+        </div>
+        
+    </section>
+    <!-- This is the grey background  for the modal -->
+    <div if:true={showInstructions} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+
 
     
 </template>

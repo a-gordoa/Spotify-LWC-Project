@@ -22,4 +22,14 @@ export default class SpotifyPlaylistComponent extends LightningElement {
         }
 
     }
+
+    showInstructions = false;
+
+    showInstructionsHandler() {
+        if (this.showInstructions === false) {
+            this.showInstructions = true;
+        } else {
+            this.showInstructions = false;
+        }
+    }
 }
